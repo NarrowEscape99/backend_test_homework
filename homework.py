@@ -43,19 +43,19 @@ class CashCalculator(Calculator):
     }
 
     def get_today_cash_remained(self, currency):
-        currency = self.currenсies[currency]
+        vaerung = self.currenсies[currency]
         heute_geld = round(((
-            self.limit - self.get_today_stats()) / currency[1]), 2)
+            self.limit - self.get_today_stats()) / vaerung[1]), 2)
         if self.get_today_stats() < self.limit:
             antwort1 = (f'На сегодня осталось {heute_geld} '
-                        f'{currency[0]}')
+                        f'{vaerung[0]}')
             return antwort1
         elif self.get_today_stats() == self.limit:
             return 'Денег нет, держись'
         else:
             geld_abs = abs(heute_geld)
             antwort2 = ('Денег нет, держись: твой долг - '
-                        f'{geld_abs} {currency[0]}')
+                        f'{geld_abs} {vaerung[0]}')
             return antwort2
 
 
