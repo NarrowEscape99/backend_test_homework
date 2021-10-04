@@ -1,48 +1,34 @@
 import datetime as dt
 
 
-class Calculator:
-    def __init__(self, limit):
-        self.records = []
-        self.limit = limit
-
-    def add_record(self, record):
-        self.records.append(record)
-
-    def get_today_stats(self):
-        heute = dt.date.today()
-        heute_data = sum(record.amount for record in self.records
-                         if record.date == heute)
-        return heute_data
-
-    def get_week_stats(self):
-        heute = dt.date.today()
-        vor_eine_voche = heute - dt.timedelta(7)
-        woche_datei = sum(record.amount for record in self.records
-                          if vor_eine_voche <= record.date <= heute)
-        return woche_datei
-
-    def remained(self):
-        return self.limit - self.get_today_stats()
-
-
 class Record:
     def __init__(self, amount, comment, date=None):
         self.amount = amount
         self.comment = comment
-        if date is not None:
-            self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
-        else:
+        if date is None:
             self.date = dt.date.today()
+        else:
+            self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
 
 
-class CaloriesCalculator(Calculator):
-    def get_calories_remained(self):
-        calorie_bleiben = self.remained()
-        if calorie_bleiben <= 0:
-            return 'Хватит есть!'
-        return ('Сегодня можно съесть что-нибудь ещё, но с общей '
-                f'калорийностью не более {calorie_bleiben} кКал')
+class Calculator:
+    def __init__(self, limit):
+        self.limit = limit
+        self.records = []
+
+    def add_record(self, record: Record):
+        self.records.append(record)
+
+    def get_today_stats(self):
+        summ = [record.amount for record in self.records if
+                record.date == dt.date.today()]
+        return sum(summ)
+
+    def get_week_stats(self):
+        woche = dt.date.today() - dt.timedelta(days=7)
+        woche_summ = [record.amount for record in self.records if
+                      woche <= record.date <= dt.date.today()]
+        return sum(woche_summ)
 
 
 class CashCalculator(Calculator):
@@ -50,26 +36,41 @@ class CashCalculator(Calculator):
     EURO_RATE = float(70.0)
     RUB_RATE = float(1.0)
     heute_geld = 0
-    currencies = {
+    currenсies = {
         'usd': ('USD', USD_RATE),
-        'eur': ('EURO', EURO_RATE),
+        'eur': ('Euro', EURO_RATE),
         'rub': ('руб', RUB_RATE),
     }
 
     def get_today_cash_remained(self, currency):
-        vaerung = self.currencies[currency]
+        vaerung = self.currenсies[currency]
         heute_geld = round(((
             self.limit - self.get_today_stats()) / vaerung[1]), 2)
         if self.get_today_stats() < self.limit:
-            antwort1 = (f'На сегодня осталось {heute_geld} {vaerung[0]}')
+            antwort1 = (f'На сегодня осталось {heute_geld} '
+                        f'{vaerung[0]}')
             return antwort1
         elif self.get_today_stats() == self.limit:
-            return "Денег нет, держись"
+            return 'Денег нет, держись'
         else:
             geld_abs = abs(heute_geld)
-            antwort2 = ('Денег нет, держись: твой долг -'
+            antwort2 = ('Денег нет, держись: твой долг - '
                         f'{geld_abs} {vaerung[0]}')
             return antwort2
+
+
+class CaloriesCalculator(Calculator):
+    today_calories_remained = 0
+
+    def get_calories_remained(self):
+        heute_cal = abs(self.limit - self.get_today_stats())
+        if self.get_today_stats() < self.limit:
+            antwort3 = ('Сегодня можно съесть что-нибудь ещё, но с общей '
+                        'калорийностью не более '
+                        f'{heute_cal} кКал')
+            return antwort3
+        else:
+            return 'Хватит есть!'
 
 
 cash_calculator = CashCalculator(1000)
