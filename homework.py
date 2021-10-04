@@ -36,6 +36,15 @@ class Record:
             self.date = dt.date.today()
 
 
+class CaloriesCalculator(Calculator):
+    def get_calories_remained(self):
+        calorie_bleiben = self.remained()
+        if calorie_bleiben <= 0:
+            return 'Хватит есть!'
+        return ('Сегодня можно съесть что-нибудь ещё, но с общей '
+                f'калорийностью не более {calorie_bleiben} кКал')
+
+
 class CashCalculator(Calculator):
     USD_RATE = float(60.0)
     EURO_RATE = float(70.0)
@@ -50,22 +59,12 @@ class CashCalculator(Calculator):
             'usd': ('USD', self.USD_RATE),
             'rub': ('руб', self.RUB_RATE),
         }
-
         vaerung, fx = currencies.get(currency)
         geld_bleiben = round(geld_bleiben / fx, 2)
         if geld_bleiben > 0:
             return f'На сегодня осталось {geld_bleiben} {vaerung}'
         geld_bleiben = abs(geld_bleiben)
         return f'Денег нет, держись: твой долг - {geld_bleiben} {vaerung}'
-
-
-class CaloriesCalculator(Calculator):
-    def get_calories_remained(self):
-        calorie_bleiben = self.remained()
-        if calorie_bleiben <= 0:
-            return 'Хватит есть!'
-        return ('Сегодня можно съесть что-нибудь ещё, но с общей '
-                f'калорийностью не более {calorie_bleiben} кКал')
 
 
 cash_calculator = CashCalculator(1000)
