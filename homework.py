@@ -15,26 +15,31 @@ class Calculator:
     def __init__(self, limit):
         self.limit = limit
         self.records = []
+        self.heute = dt.date.today()
+        self.vor_einer_woche = self.heute - dt.timedelta(7)
 
     def add_record(self, record: Record):
         self.records.append(record)
 
     def get_today_stats(self):
-        summ = [record.amount for record in self.records if
-                record.date == dt.date.today()]
-        return sum(summ)
+        tag_stats = []
+        for record in self.records:
+            if record.date == self.heute:
+                tag_stats.append(record.amount)
+        return sum(tag_stats)
 
     def get_week_stats(self):
-        woche = dt.date.today() - dt.timedelta(days=7)
-        woche_summ = [record.amount for record in self.records if
-                      woche <= record.date <= dt.date.today()]
-        return sum(woche_summ)
+        woche_datei = []
+        for record in self.records:
+            if self.vor_einer_woche <= record.date <= self.heute:
+                woche_datei.append(record.amount)
+        return sum(woche_datei)
 
 
 class CashCalculator(Calculator):
-    USD_RATE = float(60.0)
-    EURO_RATE = float(70.0)
-    RUB_RATE = float(1.0)
+    USD_RATE = 60.0
+    EURO_RATE = 70.0
+    RUB_RATE = 1.0
     heute_geld = 0
     currenсies = {
         'usd': ('USD', USD_RATE),
@@ -60,7 +65,7 @@ class CashCalculator(Calculator):
 
 
 class CaloriesCalculator(Calculator):
-    today_calories_remained = 0
+    heute_cal = 0
 
     def get_calories_remained(self):
         heute_cal = abs(self.limit - self.get_today_stats())
