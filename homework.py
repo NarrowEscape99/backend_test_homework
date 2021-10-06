@@ -2,93 +2,78 @@ import datetime as dt
 
 
 class Record:
+
     def __init__(self, amount, comment, date=None):
         self.amount = amount
         self.comment = comment
-        if date is None:
-            self.date = dt.date.today()
+        date_format = '%d.%m.%Y'
+        if date is not None:
+            self.date = dt.datetime.strptime(date, date_format).date()
         else:
-            self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
+            self.date = dt.date.today()
 
 
 class Calculator:
+
     def __init__(self, limit):
         self.limit = limit
         self.records = []
-        self.heute = dt.date.today()
-        self.vor_einer_woche = self.heute - dt.timedelta(7)
 
-    def add_record(self, record: Record):
+    def add_record(self, record):
         self.records.append(record)
 
-    def get_today_stats(self):
-        tag_stats = []
-        for record in self.records:
-            if record.date == self.heute:
-                tag_stats.append(record.amount)
-        return sum(tag_stats)
-
     def get_week_stats(self):
-        woche_datei = []
-        for record in self.records:
-            if self.vor_einer_woche <= record.date <= self.heute:
-                woche_datei.append(record.amount)
-        return sum(woche_datei)
+        now = dt.date.today()
+        one_week_ago = now - dt.timedelta(days=7)
+        weekly_data = [record.amount for record in self.records if
+                       one_week_ago <= record.date <= now]
+        return sum(weekly_data)
+
+    def get_today_stats(self):
+        now = dt.date.today()
+        daily_data = [record.amount for record in self.records if
+                      record.date == now]
+        return sum(daily_data)
+
+    def get_today_limit_balance(self):
+        money_limit = self.limit - self.get_today_stats()
+        return money_limit
+
+
+class CaloriesCalculator(Calculator):
+
+    def get_calories_remained(self):
+        now_calories = self.limit - self.get_today_stats()
+        if self.get_today_stats() < 0:
+            answer_1 = ('Сегодня можно съесть что-нибудь ещё, но с общей '
+                        'калорийностью не более '
+                        f'{now_calories} кКал')
+            return answer_1
+        return 'Хватит есть!'
 
 
 class CashCalculator(Calculator):
     USD_RATE = 60.0
     EURO_RATE = 70.0
     RUB_RATE = 1.0
-    heute_geld = 0
-    currenсies = {
-        'usd': ('USD', USD_RATE),
-        'eur': ('Euro', EURO_RATE),
-        'rub': ('руб', RUB_RATE),
-    }
 
     def get_today_cash_remained(self, currency):
-        vaerung = self.currenсies[currency]
-        heute_geld = round(((
-            self.limit - self.get_today_stats()) / vaerung[1]), 2)
-        if self.get_today_stats() < self.limit:
-            antwort1 = (f'На сегодня осталось {heute_geld} '
-                        f'{vaerung[0]}')
-            return antwort1
-        elif self.get_today_stats() == self.limit:
+        now_stats = self.get_today_stats()
+        currenсies = {
+            'usd': ('USD', CashCalculator.USD_RATE),
+            'eur': ('Euro', CashCalculator.EURO_RATE),
+            'rub': ('руб', CashCalculator.RUB_RATE),
+        }
+        foreign_exchange, rate = currenсies[currency]
+        money_now = round(((
+            self.limit - now_stats) / rate), 2)
+        if now_stats < self.limit:
+            answer_2 = (f'На сегодня осталось {money_now} '
+                        f'{foreign_exchange}')
+            return answer_2
+        elif now_stats == self.limit:
             return 'Денег нет, держись'
-        else:
-            geld_abs = abs(heute_geld)
-            antwort2 = ('Денег нет, держись: твой долг - '
-                        f'{geld_abs} {vaerung[0]}')
-            return antwort2
-
-
-class CaloriesCalculator(Calculator):
-    heute_cal = 0
-
-    def get_calories_remained(self):
-        heute_cal = abs(self.limit - self.get_today_stats())
-        if self.get_today_stats() < self.limit:
-            antwort3 = ('Сегодня можно съесть что-нибудь ещё, но с общей '
-                        'калорийностью не более '
-                        f'{heute_cal} кКал')
-            return antwort3
-        else:
-            return 'Хватит есть!'
-
-
-cash_calculator = CashCalculator(1000)
-
-# дата в параметрах не указана,
-# так что по умолчанию к записи
-# должна автоматически добавиться сегодняшняя дата
-cash_calculator.add_record(Record(amount=145, comment='кофе'))
-# и к этой записи тоже дата должна добавиться автоматически
-cash_calculator.add_record(Record(amount=300, comment='Серёге за обед'))
-# а тут пользователь указал дату, сохраняем её
-cash_calculator.add_record(Record(amount=3000,
-                                  comment='бар в Танин др',
-                                  date='08.11.2019'))
-
-print(cash_calculator.get_today_cash_remained('rub'))
+        debt = 0 - money_now
+        answer_3 = ('Денег нет, держись: твой долг - '
+                    f'{debt} {foreign_exchange}')
+        return answer_3
