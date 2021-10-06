@@ -71,7 +71,7 @@ class CashCalculator(Calculator):
             answer_2 = (f'На сегодня осталось {money_now} '
                         f'{foreign_exchange}')
             return answer_2
-        elif now_stats == self.limit:
+        if now_stats == self.limit:
             return 'Денег нет, держись'
         debt = 0 - money_now
         answer_3 = ('Денег нет, держись: твой долг - '
